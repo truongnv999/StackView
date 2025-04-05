@@ -26,15 +26,15 @@ class StackLayoutCustom @JvmOverloads constructor(
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     private val gestureDetector: GestureDetector
 
-    // Header TextView hiển thị text ở mép trên, luôn nằm dưới các CardView.
-    // Cập nhật gravity center horizontal.
+    // Header TextView displays text at the top edge, always beneath the CardViews.
+    // Gravity set to center horizontally.
     private val headerTextView: TextView = TextView(context).apply {
         text = ""
         gravity = Gravity.CENTER_HORIZONTAL
     }
 
     init {
-        // Thêm header vào layout tại index 0 để luôn nằm ở dưới (background)
+        // Add header at index 0 so it's always at the bottom (background)
         addView(headerTextView, 0)
 
         gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
@@ -98,7 +98,7 @@ class StackLayoutCustom @JvmOverloads constructor(
     }
 
     /**
-     * Lấy CardView nằm trên cùng (bỏ qua header TextView).
+     * Gets the topmost CardView (ignoring the header TextView).
      */
     private fun getTopChild(): CardView? {
         for (i in childCount - 1 downTo 0) {
@@ -111,9 +111,10 @@ class StackLayoutCustom @JvmOverloads constructor(
     }
 
     /**
-     * Xử lý animation khi CardView được vuốt ra khỏi màn hình.
-     * Sau animation, CardView được reset vị trí, chuyển ra phía sau và được thêm lại vào vị trí ngay sau header (index 1)
-     * để tạo hiệu ứng vuốt lặp vô hạn.
+     * Handles animation when a CardView is swiped off the screen.
+     * After animation, the CardView is reset, sent to the back,
+     * and added again right after the header (index 1)
+     * to create an infinite loop swipe effect.
      */
     private fun animateSwipe(view: CardView, currentTranslationY: Float) {
         val targetTranslationY = if (currentTranslationY > 0) height.toFloat() else -height.toFloat()
@@ -125,7 +126,7 @@ class StackLayoutCustom @JvmOverloads constructor(
                 view.translationY = -view.height.toFloat()
                 view.alpha = 1f
 
-                // Loại bỏ view hiện tại và thêm lại ngay sau header (index 1)
+                // Remove current view and add it again right after header (index 1)
                 removeView(view)
                 addView(view, 1)
 
@@ -180,9 +181,10 @@ class StackLayoutCustom @JvmOverloads constructor(
     }
 
     /**
-     * Thêm CardView vào stack với hiệu ứng fade-in.
-     * Nếu view đã thuộc layout hiện tại, ta chỉ cần animate fade-in.
-     * Nếu không, đảm bảo gỡ view ra khỏi parent cũ trước khi thêm vào vị trí index 1 (ngay sau header).
+     * Adds a CardView to the stack with a fade-in effect.
+     * If the view already belongs to this layout, just animate fade-in.
+     * Otherwise, ensure it's removed from its old parent
+     * and added at index 1 (right after header).
      */
     fun addStackChild(child: CardView) {
         if (child.parent === this) {
@@ -194,12 +196,12 @@ class StackLayoutCustom @JvmOverloads constructor(
             return
         }
 
-        // Nếu view có parent khác, gỡ bỏ nó khỏi parent đó
+        // Remove from old parent if needed
         (child.parent as? ViewGroup)?.removeView(child)
 
         child.isClickable = false
         child.alpha = 0f
-        // Thêm vào ngay sau header (index 1)
+        // Add right after header (index 1)
         addView(child, 1)
 
         child.animate().cancel()
@@ -210,7 +212,7 @@ class StackLayoutCustom @JvmOverloads constructor(
     }
 
     /**
-     * Xóa CardView khỏi stack với hiệu ứng fade-out.
+     * Removes a CardView from the stack with a fade-out effect.
      */
     fun removeStackChild(child: CardView) {
         child.animate().cancel()
@@ -226,12 +228,12 @@ class StackLayoutCustom @JvmOverloads constructor(
     }
 
     /**
-     * Hàm setHeaderText cho phép đặt text, text size và text color cho header TextView.
-     * Các tham số textSize và textColor là tùy chọn, nếu truyền vào sẽ được áp dụng.
+     * Allows setting text, text size and text color for the header TextView.
+     * TextSize and textColor are optional parameters.
      *
-     * @param text Nội dung text cần hiển thị.
-     * @param textSize (Tùy chọn) Kích thước chữ, đơn vị sp.
-     * @param textColor (Tùy chọn) Mã màu của chữ.
+     * @param text The content to display.
+     * @param textSize (Optional) Text size in sp.
+     * @param textColor (Optional) Text color as ARGB int.
      */
     fun setHeaderText(text: String, textSize: Float? = null, textColor: Int? = null) {
         headerTextView.text = text
@@ -241,15 +243,15 @@ class StackLayoutCustom @JvmOverloads constructor(
 
     /**
      * onMeasure:
-     * - Đo kích thước của header TextView.
-     * - Đo các CardView theo logic ban đầu.
+     * - Measure header TextView size.
+     * - Measure all CardViews with decreasing size for stacked effect.
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val parentWidth = MeasureSpec.getSize(widthMeasureSpec)
         val parentHeight = MeasureSpec.getSize(heightMeasureSpec)
         setMeasuredDimension(parentWidth, parentHeight)
 
-        // Đo header TextView
+        // Measure header TextView
         measureChild(headerTextView, widthMeasureSpec, heightMeasureSpec)
 
         val screenWidth = context.resources.displayMetrics.widthPixels
@@ -275,14 +277,14 @@ class StackLayoutCustom @JvmOverloads constructor(
 
     /**
      * onLayout:
-     * - Bố trí header TextView tại mép trên.
-     * - Căn giữa và xếp chồng các CardView theo logic ban đầu.
+     * - Layout the header TextView at the top.
+     * - Center and stack CardViews with offset logic.
      */
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         val parentWidth = right - left
         val parentHeight = bottom - top
 
-        // Layout header TextView tại mép trên (full width, height theo nội dung)
+        // Layout header TextView at the top (full width, wrap height)
         headerTextView.layout(0, 0, parentWidth, headerTextView.measuredHeight)
 
         val cardViews = mutableListOf<CardView>()
