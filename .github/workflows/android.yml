@@ -32,4 +32,5 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Build StackView library
-        run: ./gradlew :stackview:assembleRelease
+        run: ./gradlew :stack_view:assembleRelease
+
