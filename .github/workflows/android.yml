@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +20,9 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       - name: Cache Gradle
         uses: actions/cache@v3
         with:
@@ -29,5 +31,5 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      - name: Build Library
+      - name: Build StackView library
         run: ./gradlew :stackview:assembleRelease
