@@ -20,7 +20,7 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
-      - name: Make gradlew executable
+      - name: Make gradlew executable m
         run: chmod +x gradlew
 
       - name: Cache Gradle

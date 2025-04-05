@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.stackView.setHeaderText("Stack View")
+        binding.stackView.setHeaderText("Swipe up to continue")
         val widthDp = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             86f,
